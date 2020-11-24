@@ -17,6 +17,9 @@
  * =====================================================================================
  */
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include "minishell.h"
 
 char *lookupPath(char **, char **);
@@ -26,6 +29,7 @@ void printPrompt();
 void readCommand();
 
 int main() {
+    // parsePath()
 
     while(1) {
         printPrompt();
@@ -56,15 +60,18 @@ int parsePath(char *dirs[]) {
     char *pathEnvVar;
     char *thePath;
 
-    for (i=0; i<MAX_ARGS; i++) {
-        dirs[i] = NULL;
-    }
-    
     pathEnvVar = (char *) getenv("PATH");
     thePath = (char *) malloc(strlen(pathEnvVar) + 1);
     strcpy(thePath, pathEnvVar);
 
     // loop to parse PATH with ':' as delimiter between each path name
+    char *tempStr = strtok(pathEnvVar, ":");
+
+    int i = 0;
+    while (tempStr != NULL) {
+        dirs[i++] = tempStr;
+        tempStr = strtok (NULL, ":");
+    }
 
 }
 
@@ -74,20 +81,30 @@ char *lookupPath(char **argv, char **dir) {
      * to see if argv[0] (the file name) appears there.
      * Allocate a new string, place the full path name in it, the return the string.
      */
-    char *result;
-    char pName(MAX_PATH_LEN);
+    char result[100];
+    char pName(MAX_PATH_LEN); // TODO: Not sure what this does
 
     // check if file name is already an absolute path name
     if (*argv[0] == '/') {
-        // ...
-        break;
+        if (access(argv[0], F_OK && X_OK) == 0) {
+            return argv[0];
+        } else {
+            fprintf(stderr, "%s: command not found\n", argv[0]);
+            return NULL;
+        }
     }
 
     // Look in PATH directories.
     // Use access() to see if the file is in a directory
-    for (i = 0; i < MAX_PATHS; i++) {
-        // ...
-        break;
+    for (int i = 0; i < MAX_PATHS; i++) {
+        // create the absolute path for the given command
+        char temp[100];
+        strcat(temp, dirs[i]);
+        strcat(temp, argv[0]);
+        // test for existance and executablility
+        if (access(temp, F_OK && X_OK)) {
+            return temp;
+        }
     }
 
     // File name not found in any path variable
@@ -103,7 +120,11 @@ void readCommand(char *buffer) {
 }
 
 void printPrompt() {
-    // print string contains machine name, current directory, and other desired information
-    promptString = "$";
-    printf("$s ", promptString);
+    char hostname[255];//this variable will hold the host's name, the maximum size of which is 255 characters =k
+    gethostname(hostname, 255);//this command actually gets the host's name and stores it in the hostname variable =k
+    
+    char* username = getenv("USER");//this command retrieves the user's name and stores it in the username variable =k
+    char* filepath = getenv("PWD"); //PWD-HOME //this command retrieves the user's current directory and stores it in the variable filepath =k
+    
+    printf("%s@%s:%s$", username, hostname, filepath); //this command prints out all the neccessary previously gathered information =k
 }
