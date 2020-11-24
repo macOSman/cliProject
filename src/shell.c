@@ -149,33 +149,7 @@ int parseCommand(char *cLine, struct command_t *cmd) {
 		
 		return 1;
 }
-//Sets up command_t to save command arguments
-struct command_t{
-	char *name;
-	int argc;
-	char *argv[MAX_ARGS];
-};
 
-int parseCommand(char *cLine, struct command_t *cmd) {
-		int argc;
-		char **clPtr;
-		
-		//Initialization
-		clPtr = &cLine; //This is the command line
-		argc = 0;
-		cmd->argv[argc] = (char *) malloc(MAX_ARG_LEN);
-		//Fill argv[]
-		while((cmd->argv[argc] = strsep(clPtr, WHITESPACE)) != NULL){
-			cmd->argv[++argc] = (char *) malloc(MAX_ARG_LEN);
-			}
-			
-		//Set command name and argc
-		cmd->argc = argc-1;
-		cmd->name = (char *) malloc(sizeof(cmd->argv[0]));
-		strcpy(cmd->name, cmd->argv[0]);
-		
-		return 1;
-}
 
 void printPrompt() {
     char hostname[255];//this variable will hold the host's name, the maximum size of which is 255 characters =k
