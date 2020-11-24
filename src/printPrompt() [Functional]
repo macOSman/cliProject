@@ -1,0 +1,10 @@
+void printPrompt() 
+{    
+    char hostname[255];//this variable will hold the host's name, the maximum size of which is 255 characters =k
+    gethostname(hostname, 255);//this command actually gets the host's name and stores it in the hostname variable =k
+    
+    char* username = getenv("USER");//this command retrieves the user's name and stores it in the username variable =k
+    char* filepath = getenv("PWD"); //PWD-HOME //this command retrieves the user's current directory and stores it in the variable filepath =k
+    
+    printf("%s@%s:%s$", username, hostname, filepath); //this command prints out all the neccessary previously gathered information =k
+}
