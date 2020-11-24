@@ -28,6 +28,8 @@ int parsePath(char **);
 void printPrompt();
 void readCommand();
 
+char *dirs[MAX_PATHS];
+
 int main() {
     // parsePath()
 
@@ -52,7 +54,7 @@ int main() {
     return 0;
 }
 
-int parsePath(char *dirs[]) {
+void parsePath() {
     /*
      * This function reads the PATH variable for this environment,
      *  then builds an array, dirs[], of the directories in PATH
@@ -100,6 +102,7 @@ char *lookupPath(char **argv, char **dir) {
         // create the absolute path for the given command
         char temp[100];
         strcat(temp, dirs[i]);
+        strcat(temp, "/");
         strcat(temp, argv[0]);
         // test for existance and executablility
         if (access(temp, F_OK && X_OK)) {
