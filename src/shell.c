@@ -35,8 +35,9 @@ int main() {
 
     while(1) {
         printPrompt();
-
+	
         // read command line input then parse
+	char commandLine[Line_LEN];
         readCommand(commandLine);
         parseCommand(commandLine, &command);
 
@@ -116,10 +117,9 @@ char *lookupPath(char **argv, char **dir) {
 }
 
 void readCommand(char *buffer) {
-    /*
-     * Read entire command line into the buffer
-     */
-    gets(buffer);
+    
+    fgets(buffer, Line_LEN, stdin);//we use fgets over gets() because it is a safer function as it checks the entered command against the size regulation in our minishell =k
+	return;
 }
 
 //Sets up command_t to save command arguments
