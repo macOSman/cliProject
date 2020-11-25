@@ -26,7 +26,7 @@ char *lookupPath(char **, char **);
 int parseCommand(char *, struct command_t *);
 int parsePath(char **);
 void printPrompt();
-void readCommand();
+void readCommand(char* buffer);
 
 char *dirs[MAX_PATHS];
 
