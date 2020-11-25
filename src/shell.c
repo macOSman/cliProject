@@ -22,27 +22,31 @@
 #include <unistd.h>
 #include "minishell.h"
 
-char *lookupPath(char **, char **);
+char *lookupPath(char **);
 int parseCommand(char *, struct command_t *);
 void parsePath();
 void printPrompt();
 void readCommand(char* buffer);
 
-char *dirs[MAX_PATHS];
+char *dirs[MAX_PATHS]; // all directories within PATH
+int pathLen = 0; // number of directories in dirs[]
 
 int main() {
-    // parsePath()
+    
+    parsePath();
 
     while(1) {
         printPrompt();
-	
+
+        struct command_t command;
+        
         // read command line input then parse
-	char commandLine[Line_LEN];
+	    char commandLine[Line_LEN];
         readCommand(commandLine);
         parseCommand(commandLine, &command);
 
         // get full pathname of file
-        command.name = lookupPath(command.argv, pathv);
+        command.name = lookupPath(command.argv);
         if (command.name == NULL) {
             // report error
             continue;
@@ -68,28 +72,26 @@ void parsePath() {
     strcpy(thePath, pathEnvVar);
 
     // loop to parse PATH with ':' as delimiter between each path name
-    char *tempStr = strtok(pathEnvVar, ":");
+    dirs[0] = strtok(thePath, ":");
 
     int i = 0;
-    while (tempStr != NULL) {
-        dirs[i++] = tempStr;
-        tempStr = strtok (NULL, ":");
+    while (dirs[i] != NULL) {
+        dirs[++i] = strtok(NULL, ":");
+        pathLen++;
     }
 
 }
 
-char *lookupPath(char **argv, char **dir) {
+char *lookupPath(char **argv) {
     /*
      * This function searches the directories identified by the dir argument 
      * to see if argv[0] (the file name) appears there.
      * Allocate a new string, place the full path name in it, the return the string.
      */
-    char result[100];
-    char pName(MAX_PATH_LEN); // TODO: Not sure what this does
-
-    // check if file name is already an absolute path name
+    
+    // check if argument name is already an absolute path name
     if (*argv[0] == '/') {
-        if (access(argv[0], F_OK && X_OK) == 0) {
+        if (access(argv[0], F_OK ) == 0) {
             return argv[0];
         } else {
             fprintf(stderr, "%s: command not found\n", argv[0]);
@@ -98,16 +100,19 @@ char *lookupPath(char **argv, char **dir) {
     }
 
     // Look in PATH directories.
-    // Use access() to see if the file is in a directory
-    for (int i = 0; i < MAX_PATHS; i++) {
+    for (int i = 0; i < pathLen; i++) {
+        
         // create the absolute path for the given command
-        char temp[100];
-        strcat(temp, dirs[i]);
+        char *temp = (char *) malloc(100);
+        strcpy(temp, dirs[i]);
         strcat(temp, "/");
         strcat(temp, argv[0]);
-        // test for existance and executablility
-        if (access(temp, F_OK && X_OK)) {
+        
+        // Use access() to see if the file is in a directory
+        if (access(temp, F_OK ) == 0) {
             return temp;
+        } else {
+            free(temp);
         }
     }
 
@@ -122,12 +127,6 @@ void readCommand(char *buffer) {
 	return;
 }
 
-//Sets up command_t to save command arguments
-struct command_t{
-	char *name;
-	int argc;
-	char *argv[MAX_ARGS];
-};
 
 int parseCommand(char *cLine, struct command_t *cmd) {
 		int argc;
