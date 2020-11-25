@@ -49,10 +49,26 @@ int main() {
         command.name = lookupPath(command.argv);
         if (command.name == NULL) {
             // report error
+            perror("Command not found");
             continue;
         }
 
+        // create a string that is the command and all args
+        char commandStr[100];
+        strcat(commandStr, command.name);
+        strcat(commandStr, " ");
+        for (int i=1; i<command.argc; i++){
+            strcat(commandStr, command.argv[i]);
+            strcat(commandStr, " ");
+        }
+
         // create child and execute command
+        if (fork() == 0) {
+            system(commandStr);
+            memset(commandStr, 0, strlen(commandStr));
+        } else {
+            wait(0);
+        }
         // wait for child to execute
     }
     
@@ -68,9 +84,10 @@ void parsePath() {
     char *thePath;
 
     pathEnvVar = (char *) getenv("PATH");
+    strcat(pathEnvVar, ":/bin");
     thePath = (char *) malloc(strlen(pathEnvVar) + 1);
     strcpy(thePath, pathEnvVar);
-
+    
     // loop to parse PATH with ':' as delimiter between each path name
     dirs[0] = strtok(thePath, ":");
 
@@ -157,5 +174,5 @@ void printPrompt() {
     char* username = getenv("USER");//this command retrieves the user's name and stores it in the username variable =k
     char* filepath = getenv("PWD"); //PWD-HOME //this command retrieves the user's current directory and stores it in the variable filepath =k
     
-    printf("%s@%s:%s$", username, hostname, filepath); //this command prints out all the neccessary previously gathered information =k
+    printf("%s@%s:%s$ ", username, hostname, filepath); //this command prints out all the neccessary previously gathered information =k
 }
