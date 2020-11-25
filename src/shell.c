@@ -24,7 +24,7 @@
 
 char *lookupPath(char **, char **);
 int parseCommand(char *, struct command_t *);
-int parsePath(char **);
+void parsePath();
 void printPrompt();
 void readCommand();
 
