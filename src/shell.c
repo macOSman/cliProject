@@ -16,26 +16,30 @@
  *
  * =====================================================================================
  */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "minishell.h"
 
-char *lookupPath(char **);
+char *lookupPath(char **, char **);
 int parseCommand(char *, struct command_t *);
-void parsePath();
+void parsePath(char **);
 void printPrompt();
 void readCommand(char* buffer);
 
-char *dirs[MAX_PATHS]; // all directories within PATH
-int pathLen = 0; // number of directories in dirs[]
-
 int main() {
-    
-    parsePath();
 
+    // Array of all directories in user's $PATH
+    char *dirs[MAX_PATHS]; 
+    parsePath(dirs);
+     
+    // main shell loop
     while(1) {
+        // print prompt after every command
         printPrompt();
 
         struct command_t command;
@@ -46,12 +50,13 @@ int main() {
         parseCommand(commandLine, &command);
 
         // get full pathname of file
-        command.name = lookupPath(command.argv);
+        command.name = lookupPath(command.argv, dirs);
         if (command.name == NULL) {
             // report error
             perror("Command not found");
             continue;
         } else if (strcmp(command.name, "cd") == 0) {
+            // edge case to handle traditional 'cd' command
             chdir(command.argv[1]);
             continue;
         } 
@@ -62,13 +67,17 @@ int main() {
         } else {
             wait(0);
         }
-        // wait for child to execute
     }
     
     return 0;
 }
 
-void parsePath() {
+/* 
+ * Reads the user's PATH variable and parses it into an array were each element is separated by a ':' 
+ * Args: An array to fill with all pathnames in $PATH
+ * Author: Ryan Campbell
+ */
+void parsePath(char **dirs) {
     /*
      * This function reads the PATH variable for this environment,
      *  then builds an array, dirs[], of the directories in PATH
@@ -87,17 +96,17 @@ void parsePath() {
     int i = 0;
     while (dirs[i] != NULL) {
         dirs[++i] = strtok(NULL, ":");
-        pathLen++;
     }
 
 }
 
-char *lookupPath(char **argv) {
-    /*
-     * This function searches the directories identified by the dir argument 
-     * to see if argv[0] (the file name) appears there.
-     * Allocate a new string, place the full path name in it, the return the string.
-     */
+/* 
+ * Searches available directories for binary files (commands) issued by the user.  
+ * Returns a string, if it exists, that is the aboslute path name for the given command. 
+ * Args: takes the user supplied arguments and a list of directories to search
+ * Author: Ryan Campbell
+ */
+char *lookupPath(char **argv, char **dirs) {
     
     // check if argument name is already an absolute path name
     if (*argv[0] == '/') {
@@ -112,64 +121,95 @@ char *lookupPath(char **argv) {
         return "cd";
     }
 
-    // Look in PATH directories.
-    for (int i = 0; i < pathLen; i++) {
-        
-        // create the absolute path for the given command
+    // Look in each PATH directory.
+    int i = 0;
+    while (dirs[i] != NULL) {
+
+        // create the potential absolute path for the given command
         char *temp = (char *) malloc(100);
         strcpy(temp, dirs[i]);
         strcat(temp, "/");
         strcat(temp, argv[0]);
         
-        // Use access() to see if the file is in a directory
+        // Use access() to see if its the correct directory
         if (access(temp, F_OK ) == 0) {
             return temp;
         } else {
             free(temp);
         }
+        
+        i++;
     }
-
+        
     // File name not found in any path variable
     fprintf(stderr, "%s: command not found\n", argv[0]);
     return NULL;
 }
 
+
+/* 
+ * <Describe Function> 
+ * <RETURNS>
+ * <ARGUMENTS>
+ * <AUTHOR>
+ */
 void readCommand(char *buffer) {
-    
-    fgets(buffer, Line_LEN, stdin);//we use fgets over gets() because it is a safer function as it checks the entered command against the size regulation in our minishell =k
+     
+    // We use fgets over gets() because it is a safer function as it checks the entered command 
+    // against the size regulation in our minishell =k
+    fgets(buffer, Line_LEN, stdin);
 	return;
 }
 
-
+/* 
+ * <Describe Function> 
+ * <RETURNS>
+ * <ARGUMENTS>
+ * <AUTHOR>
+ */
 int parseCommand(char *cLine, struct command_t *cmd) {
-		int argc;
-		char **clPtr;
-		
-		//Initialization
-		clPtr = &cLine; //This is the command line
-		argc = 0;
-		cmd->argv[argc] = (char *) malloc(MAX_ARG_LEN);
-		//Fill argv[]
-		while((cmd->argv[argc] = strsep(clPtr, WHITESPACE)) != NULL){
-			cmd->argv[++argc] = (char *) malloc(MAX_ARG_LEN);
-			}
-			
-		//Set command name and argc
-		cmd->argc = argc-1;
-		cmd->name = (char *) malloc(sizeof(cmd->argv[0]));
-		strcpy(cmd->name, cmd->argv[0]);
-		
-		return 1;
+    int argc;
+    char **clPtr;
+    
+    // Initialization
+    clPtr = &cLine; // This is the command line
+    argc = 0;
+    cmd->argv[argc] = (char *) malloc(MAX_ARG_LEN);
+    
+    // Fill argv[]
+    while((cmd->argv[argc] = strsep(clPtr, WHITESPACE)) != NULL){
+        cmd->argv[++argc] = (char *) malloc(MAX_ARG_LEN);
+    }
+    
+    // Set command name and argc
+    cmd->argc = argc-1;
+    cmd->name = (char *) malloc(sizeof(cmd->argv[0]));
+    strcpy(cmd->name, cmd->argv[0]);
+    
+    return 1;
 }
 
-
+/* 
+ * <Describe Function> 
+ * <RETURNS>
+ * <ARGUMENTS>
+ * <AUTHOR>
+ */
 void printPrompt() {
-    char hostname[255];//this variable will hold the host's name, the maximum size of which is 255 characters =k
-    gethostname(hostname, 255);//this command actually gets the host's name and stores it in the hostname variable =k
     
-    char* username = getenv("USER");//this command retrieves the user's name and stores it in the username variable =k
-    //char* filepath = getenv("PWD"); //PWD-HOME //this command retrieves the user's current directory and stores it in the variable filepath =k
+    // this variable will hold the host's name, the maximum size of which is 255 characters =k
+    // this command actually gets the host's name and stores it in the hostname variable =k
+    char hostname[255];
+    gethostname(hostname, 255);
+    
+    // this command retrieves the user's name and stores it in the username variable =k
+    char* username = getenv("USER");
+    
+    // The following retrieves the user's current directory 
+    // and stores it in the variable filepath =k
     char s[100];
     char* filepath = getcwd(s, 100);
-    printf("%s@%s:%s$ ", username, hostname, filepath); //this command prints out all the neccessary previously gathered information =k
+
+    // this command prints out all the neccessary previously gathered information =k
+    printf("%s@%s:%s$ ", username, hostname, filepath);
 }
