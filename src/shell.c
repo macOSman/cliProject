@@ -51,21 +51,14 @@ int main() {
             // report error
             perror("Command not found");
             continue;
-        }
-
-        // create a string that is the command and all args
-        char commandStr[100];
-        strcat(commandStr, command.name);
-        strcat(commandStr, " ");
-        for (int i=1; i<command.argc; i++){
-            strcat(commandStr, command.argv[i]);
-            strcat(commandStr, " ");
-        }
+        } else if (strcmp(command.name, "cd") == 0) {
+            chdir(command.argv[1]);
+            continue;
+        } 
 
         // create child and execute command
         if (fork() == 0) {
-            system(commandStr);
-            memset(commandStr, 0, strlen(commandStr));
+            execv(command.name, command.argv);
         } else {
             wait(0);
         }
@@ -114,6 +107,9 @@ char *lookupPath(char **argv) {
             fprintf(stderr, "%s: command not found\n", argv[0]);
             return NULL;
         }
+    } else if (strcmp(argv[0], "cd") == 0){
+        // edge case to handle traditional cd command
+        return "cd";
     }
 
     // Look in PATH directories.
@@ -172,7 +168,8 @@ void printPrompt() {
     gethostname(hostname, 255);//this command actually gets the host's name and stores it in the hostname variable =k
     
     char* username = getenv("USER");//this command retrieves the user's name and stores it in the username variable =k
-    char* filepath = getenv("PWD"); //PWD-HOME //this command retrieves the user's current directory and stores it in the variable filepath =k
-    
+    //char* filepath = getenv("PWD"); //PWD-HOME //this command retrieves the user's current directory and stores it in the variable filepath =k
+    char s[100];
+    char* filepath = getcwd(s, 100);
     printf("%s@%s:%s$ ", username, hostname, filepath); //this command prints out all the neccessary previously gathered information =k
 }
