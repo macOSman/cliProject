@@ -148,15 +148,15 @@ char *lookupPath(char **argv, char **dirs) {
 
 
 /* 
- * <Describe Function> 
- * <RETURNS>
- * <ARGUMENTS>
- * <AUTHOR>
+ * This reads the command from the user into a buffer
+ * Returns nothing
+ * Must be passed a char array as a buffer
+ * Kalan Bonnette
  */
 void readCommand(char *buffer) {
      
     // We use fgets over gets() because it is a safer function as it checks the entered command 
-    // against the size regulation in our minishell =k
+    // against the size regulation in our minishell 
     fgets(buffer, Line_LEN, stdin);
 	return;
 }
@@ -190,26 +190,26 @@ int parseCommand(char *cLine, struct command_t *cmd) {
 }
 
 /* 
- * <Describe Function> 
- * <RETURNS>
- * <ARGUMENTS>
- * <AUTHOR>
+ * This reads the evironment's user data and current directory and outputs it to the user's interface. 
+ * This function prints text, but does not return anything
+ * This function needs to be passed no arguments
+ * Kalan Bonnette
  */
 void printPrompt() {
     
-    // this variable will hold the host's name, the maximum size of which is 255 characters =k
-    // this command actually gets the host's name and stores it in the hostname variable =k
+    // this variable will hold the host's name, the maximum size of which is 255 characters 
+    // this command actually gets the host's name and stores it in the hostname variable 
     char hostname[255];
     gethostname(hostname, 255);
     
-    // this command retrieves the user's name and stores it in the username variable =k
+    // this command retrieves the user's name and stores it in the username variable 
     char* username = getenv("USER");
     
     // The following retrieves the user's current directory 
-    // and stores it in the variable filepath =k
+    // and stores it in the variable filepath 
     char s[100];
     char* filepath = getcwd(s, 100);
 
-    // this command prints out all the neccessary previously gathered information =k
+    // this command prints out all the neccessary previously gathered information 
     printf("%s@%s:%s$ ", username, hostname, filepath);
 }
