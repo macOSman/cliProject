@@ -162,10 +162,10 @@ void readCommand(char *buffer) {
 }
 
 /* 
- * <Describe Function> 
- * <RETURNS>
- * <ARGUMENTS>
- * <AUTHOR>
+ * This takes the users argument and assigns it to the appropriate command 
+ * Returns an interger: 1
+ * Args passed: User input char array and command
+ * Brent Hebert
  */
 int parseCommand(char *cLine, struct command_t *cmd) {
     int argc;
